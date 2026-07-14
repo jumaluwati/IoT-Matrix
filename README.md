@@ -1,129 +1,128 @@
-# Matrix — Cisco Industrial IoT Compete
+# Matrix (Cisco IoT Compete)
 
-> When a customer says **&ldquo;they do it better,&rdquo;** show them why Cisco does it best.
+Matrix is a simple web app that helps Cisco sellers answer one question fast:
 
-Matrix is a sales-enablement web app for Cisco Industrial IoT (IIoT) sellers. Pick the competitor a customer brought up, choose the product, and get a polished battlecard — recommended Cisco counter-product, side-by-side specs, talk track, proof points, known competitor issues, and reference wins.
+"If the customer asks about a competitor, what should we recommend from Cisco, and why?"
 
-**v1 (this repo): UI-first.** Battlecards are authored as mocked JSON so the look and flow are finalized before wiring live data sources. The orchestrator + MCP clients are stubbed and ready to drop in.
+This guide is written for non-software users.
 
-## Stack
+## What Matrix does
 
-- **Next.js 14** (App Router) + **TypeScript**
-- **Tailwind CSS** with a custom design system (Apple-like surfaces, glass, soft shadows)
-- **Framer Motion** for entrance animations
-- **lucide-react** icons
-- No external CMS — battlecards live in `src/data/battlecards.ts` (mocked in v1)
+- Shows Cisco IoT products in a clean catalog
+- Lets you compare Cisco options
+- Builds competitor battlecards with:
+  - key specs
+  - talk track
+  - proof points
+  - known issues
+  - reference wins
 
-## Quick start
+## Who this is for
+
+- Sales teams
+- Solutions engineers
+- Product marketing
+- Anyone preparing customer conversations
+
+## Quick start (first time)
+
+1. Install Node.js (LTS) on your Mac/PC.
+2. Open a terminal in this project folder.
+3. Run:
 
 ```bash
-# 1. install
 npm install
-
-# 2. dev server
-npm run dev
-# → http://localhost:3000
-
-# 3. type-check / build
-npm run typecheck
-npm run build
+npm run dev -- --port 3001
 ```
 
-## Project tour
+4. Open your browser:
 
-```
-src/
-  app/
-    layout.tsx                          # Theme provider, top nav, footer
-    page.tsx                            # Landing: hero + competitor grid
-    competitor/[slug]/page.tsx          # Competitor lineup picker
-    compare/[competitor]/[product]/page.tsx  # The battlecard
-    portfolio/page.tsx                  # Cisco IIoT product catalog
-    about/page.tsx                      # How Matrix builds a battlecard
-    api/battlecard/route.ts             # GET /api/battlecard?competitor=&product=
-  components/                           # Reusable UI (cards, table, talk track, ...)
-  data/
-    competitors.ts                      # 8 competitors + their key product lines
-    cisco-iiot.ts                       # Cisco IIoT product catalog
-    battlecards.ts                      # Mocked battlecards (authored)
-  lib/
-    orchestrator.ts                     # Fan-out + Circuit synthesizer (mock vs live)
-    mcp/
-      circuit.ts                        # Cisco Circuit (Chat + RAG) client stub
-      cisco-docs.ts                     # Cisco Docs MCP client stub
-      cdets.ts                          # CDETS MCP client stub
-      webex.ts                          # Webex MCP client stub
-      public-web.ts                     # Competitor public web fetcher stub
-    types.ts                            # `Battlecard` and friends
-```
+- App home: `http://localhost:3001`
+- Cisco IoT portfolio: `http://localhost:3001/portfolio`
 
-## Wiring live data (v2)
+Note: We use port `3001` because many machines already use `3000` for other apps.
 
-1. Copy `.env.example` to `.env.local` and fill in the variables you have access to.
-2. Set `USE_MOCK_BATTLECARDS=false`.
-3. Implement the TODOs in each `src/lib/mcp/*.ts` — each function already has the signature the orchestrator expects. The UI does **not** change.
+## Day-to-day use
 
-### Cisco Circuit AI (already wired)
-
-The general Cisco Circuit chat API is wired in [src/lib/mcp/circuit.ts](src/lib/mcp/circuit.ts) (OAuth2 client_credentials → Bearer → OpenAI-compatible `/chat/completions`). Required env vars in `.env.local`:
+1. Start the app:
 
 ```bash
-CIRCUIT_CLIENT_ID=...
-CIRCUIT_CLIENT_SECRET=...
-CIRCUIT_APP_KEY=...
-CIRCUIT_MODEL=gpt-5-nano
-CIRCUIT_TOKEN_URL=https://id.cisco.com/oauth2/default/v1/token
-CIRCUIT_BASE_URL=https://chat-ai.cisco.com/openai/deployments
-USE_MOCK_BATTLECARDS=false
+npm run dev -- --port 3001
 ```
 
-Behavior with `USE_MOCK_BATTLECARDS=false`:
+2. Open `http://localhost:3001`.
+3. Pick a competitor.
+4. Pick the product line.
+5. Review the battlecard and use it in your call.
 
-- Authored mocks (the 8 in `data/battlecards.ts`) still serve **instantly** — no network call.
-- The other competitor:product pairs are synthesized live by Circuit on demand and the UI shows a **&ldquo;Synthesized live · Cisco Circuit&rdquo;** badge so the seller can see it&rsquo;s AI-generated.
-- Cisco internal search / RAG is awaiting access approval; `circuitRagQuery()` returns `[]` for now and the synthesis runs on model knowledge plus whatever MCP grounding is plumbed.
+## Main pages
 
-### Recommended order for the remaining sources
+- `/` → Competitor picker
+- `/portfolio` → Cisco IoT product catalog
+- `/portfolio/compare` → Compare two Cisco products
+- `/use-cases` → Use-case views
+- `/about` → How Matrix builds battlecards
 
-| Order | Source | Why |
-| --- | --- | --- |
-| 1 | **Cisco Circuit** | The synthesizer. Without it the orchestrator just returns retrieval hits. |
-| 2 | **Cisco Docs MCP** | Authoritative spec + datasheet grounding. Highest signal. |
-| 3 | **Public Web fetcher** | Competitor datasheets and PSIRT feeds. Cache 24h. |
-| 4 | **Webex MCP** | Win wires and tribal knowledge from Compete spaces. |
-| 5 | **CDETS MCP** | Optional, used to flag known Cisco-side issues so we don't pitch into a bug. |
+## Common issues (and easy fixes)
 
-### Schema contract
+### 1) "npm: command not found"
 
-Every source path — mock or live — must return objects that conform to the `Battlecard` interface in [src/lib/types.ts](src/lib/types.ts). If you change the schema, add a `zod` validator in `orchestrator.ts` before returning Circuit-generated cards.
+Node.js is missing from your terminal.
 
-## Adding a battlecard manually
+Fix:
 
-1. Add the competitor product to `src/data/competitors.ts` if it isn&rsquo;t there yet.
-2. Append a new entry to `BATTLECARDS` in `src/data/battlecards.ts`, keyed `"${competitorSlug}:${productSlug}"`.
-3. Pick the Cisco recommendation from `src/data/cisco-iiot.ts` (`primarySlug` + `bundleSlugs`).
-4. Reload — the lineup card on the competitor page will flip from &ldquo;Stub&rdquo; to &ldquo;Battlecard ready.&rdquo;
+- Install Node.js LTS
+- Open a new terminal window
+- Run `node -v` and `npm -v` to confirm
 
-## Design notes
+### 2) Mac says Next SWC file may be unsafe
 
-- **Apple-like surfaces**: rounded-3xl, soft shadows, glass nav, light/dark with system follow.
-- **Cisco accent only** at the recommendation side of the split hero and on win signals (badges, pillar icons).
-- Competitor product imagery is rendered as a stylized SVG (`components/product-glyph.tsx`) instead of shipping vendor assets. Swap to real images by replacing `<ProductGlyph />` with `<Image>` and dropping files into `public/products/`.
+You may see a message about `next-swc.darwin-arm64.node`.
 
-## Security and IP
+Fix (run in project folder):
 
-- No vendor logos or trademarked artwork ship with this repo — only a short text mark per competitor.
-- Public-web fetcher (when wired) must respect robots.txt and cache rather than scrape on every request.
-- Internal MCP responses (Circuit, CDETS, Webex) must never be cached to disk in production builds.
+```bash
+xattr -dr com.apple.quarantine node_modules/@next
+npm run dev -- --port 3001
+```
 
-## Roadmap
+### 3) "Port already in use"
 
-- [x] Wire Cisco Circuit Chat (general AI synthesizer)
-- [ ] Wire Cisco Circuit RAG (internal search — pending access approval)
-- [ ] Wire Cisco Docs MCP (datasheet grounding)
-- [ ] Wire CDETS MCP (Cisco-side defect awareness)
-- [ ] Wire Webex MCP (Compete-space win wires)
-- [ ] Public-web fetcher with per-vendor adapters + 24h cache
-- [ ] PDF export of a battlecard (one click → leave-behind)
-- [ ] Customer-context inputs (industry, region, deal size) to bias the recommendation
-- [ ] Salesforce / CCW integration to drop the recommended bundle straight into a quote
+Use a different port:
+
+```bash
+npm run dev -- --port 3002
+```
+
+Then open `http://localhost:3002`.
+
+## Updating content (non-code view)
+
+The app content is stored in data files. If a technical teammate helps with updates, these are the key files:
+
+- `src/data/competitors.ts`
+- `src/data/cisco-iiot.ts`
+- `src/data/battlecards.ts`
+- `src/data/use-cases.ts`
+
+## Helpful commands
+
+```bash
+npm run dev -- --port 3001   # start app
+npm run typecheck             # check project types
+npm run build                 # production build
+```
+
+## Privacy and safety notes
+
+- This repo does not ship vendor logos/artwork.
+- If live data sources are enabled later, treat internal data carefully and follow your company policy.
+
+## Need help quickly?
+
+If the app does not open:
+
+1. Make sure the terminal is still running `npm run dev`.
+2. Try another port (`3002`).
+3. Restart terminal and run the command again.
+4. Share the error text with your support/engineering contact.
