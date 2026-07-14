@@ -1,33 +1,39 @@
 # Matrix (Cisco IoT Compete)
 
-Matrix is a simple web app that helps Cisco sellers answer one question fast:
+Matrix helps you answer customer questions quickly:
 
-"If the customer asks about a competitor, what should we recommend from Cisco, and why?"
+If a customer mentions a competitor, Matrix shows what Cisco product to lead with and why.
 
-This guide is written for non-software users.
+This guide is for non-software users.
 
-## What Matrix does
+## What you can do in Matrix
 
-- Shows Cisco IoT products in a clean catalog
-- Lets you compare Cisco options
-- Builds competitor battlecards with:
-  - key specs
-  - talk track
-  - proof points
-  - known issues
-  - reference wins
+- Browse Cisco IoT products
+- Compare Cisco products side by side
+- Open battlecards with key points for customer calls
 
-## Who this is for
+## Important: Live information needs personal Circuit keys
 
-- Sales teams
-- Solutions engineers
-- Product marketing
-- Anyone preparing customer conversations
+Matrix can run in two modes:
 
-## Quick start (first time)
+- Mock mode: shows built-in demo data
+- Live mode: retrieves fresh information using Cisco Circuit
 
-1. Install Node.js (LTS) on your Mac/PC.
-2. Open a terminal in this project folder.
+To use live retrieval, you must add your own personal Circuit credentials in `.env.local`.
+
+Required keys:
+
+- `CIRCUIT_CLIENT_ID`
+- `CIRCUIT_CLIENT_SECRET`
+- `CIRCUIT_APP_KEY`
+- `USE_MOCK_BATTLECARDS=false`
+
+If these are missing, pages can still load, but live retrieval will not work.
+
+## Quick start
+
+1. Install Node.js (LTS).
+2. Open terminal in this folder.
 3. Run:
 
 ```bash
@@ -35,94 +41,47 @@ npm install
 npm run dev -- --port 3001
 ```
 
-4. Open your browser:
+4. Open:
 
-- App home: `http://localhost:3001`
-- Cisco IoT portfolio: `http://localhost:3001/portfolio`
+- http://localhost:3001
+- http://localhost:3001/portfolio
 
-Note: We use port `3001` because many machines already use `3000` for other apps.
+## Normal daily use
 
-## Day-to-day use
-
-1. Start the app:
+Run:
 
 ```bash
 npm run dev -- --port 3001
 ```
 
-2. Open `http://localhost:3001`.
-3. Pick a competitor.
-4. Pick the product line.
-5. Review the battlecard and use it in your call.
+Then open http://localhost:3001 and use the menus.
 
-## Main pages
+## Common fixes
 
-- `/` → Competitor picker
-- `/portfolio` → Cisco IoT product catalog
-- `/portfolio/compare` → Compare two Cisco products
-- `/use-cases` → Use-case views
-- `/about` → How Matrix builds battlecards
+### npm not found
 
-## Common issues (and easy fixes)
+Install Node.js LTS, open a new terminal, then check:
 
-### 1) "npm: command not found"
+```bash
+node -v
+npm -v
+```
 
-Node.js is missing from your terminal.
+### Mac blocks next-swc file
 
-Fix:
-
-- Install Node.js LTS
-- Open a new terminal window
-- Run `node -v` and `npm -v` to confirm
-
-### 2) Mac says Next SWC file may be unsafe
-
-You may see a message about `next-swc.darwin-arm64.node`.
-
-Fix (run in project folder):
+Run:
 
 ```bash
 xattr -dr com.apple.quarantine node_modules/@next
 npm run dev -- --port 3001
 ```
 
-### 3) "Port already in use"
+### Port 3001 already in use
 
-Use a different port:
+Run:
 
 ```bash
 npm run dev -- --port 3002
 ```
 
-Then open `http://localhost:3002`.
-
-## Updating content (non-code view)
-
-The app content is stored in data files. If a technical teammate helps with updates, these are the key files:
-
-- `src/data/competitors.ts`
-- `src/data/cisco-iiot.ts`
-- `src/data/battlecards.ts`
-- `src/data/use-cases.ts`
-
-## Helpful commands
-
-```bash
-npm run dev -- --port 3001   # start app
-npm run typecheck             # check project types
-npm run build                 # production build
-```
-
-## Privacy and safety notes
-
-- This repo does not ship vendor logos/artwork.
-- If live data sources are enabled later, treat internal data carefully and follow your company policy.
-
-## Need help quickly?
-
-If the app does not open:
-
-1. Make sure the terminal is still running `npm run dev`.
-2. Try another port (`3002`).
-3. Restart terminal and run the command again.
-4. Share the error text with your support/engineering contact.
+Then open http://localhost:3002
